@@ -3,23 +3,60 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Hello World!!</title>
-    <style>
-        table { border-collapse: collapse; }
-        table, th, td { border: 1px solid black; }
-    </style>
+    <title>Kasir-Electron</title>
+    <link rel="stylesheet" href="./node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script>let $ = require('jquery');</script>
+    <script>require('popper.js');</script>
+    <script>require('bootstrap');</script>
 </head>
 
 <body>
-    <h1>Hello World!</h1>
+    <h1 class="m-5 text-center">Hello World!</h1>
 
-    We are using Node.js <span id="node-version"></span>, Chromium <span id="chrome-version"></span>, Electron <span id="electron-version"></span>, and Serialport <span id="serialport-version"></span>
-    <button id="btnref">refresh</button>
-    <button id="btntes">tes</button>
-    <div id="error"></div>
-    <div id="ports"></div>
-    <br>
-    <div id="da"></div>
+    <div class="container-fluid">
+        <div class="col-md-10 mx-auto">
+            <div class="row">
+                <div class="mx-auto col-md-3 text-center">
+                    <img class="img-thumbnail" src="./src/images/ic_store.png">
+                    Kasir
+                </div>
+                <div class="mx-auto col-md-3 text-center">
+                    <img class="img-thumbnail" src="./src/images/ic_report.png">
+                    Laporan
+                </div>
+                <div class="mx-auto col-md-3 text-center">
+                    <img class="img-thumbnail" src="./src/images/ic_hutang.png">
+                    Hutang
+                </div>
+            </div>
+            <div class="row mt-5">
+                <div class="mx-auto col-md-3 text-center">
+                    <a href="app/gudang/main.html">
+                        <div class="card text-black">
+                            <img src="./src/images/ic_gudang.png" class="card-img">
+                            <div class="card-img-overlay">
+                                <h5 class="card-title mt-5">Gudang</h5>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="mx-auto col-md-3 text-center">
+                    <a href="app/gudang/main.html">
+                        <div class="card text-black">
+                            <img src="./src/images/ic_pengaturan.png" class="card-img">
+                            <div class="card-img-overlay">
+                                <h5 class="card-title mt-5">Pengaturan</h5>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                <div class="mx-auto col-md-3 text-center">
+                </div>
+            </div>
+        </div>
+    </div>
+
 </body>
 
 <script src="./renderer.js"></script>

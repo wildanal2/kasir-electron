@@ -13,6 +13,13 @@
         "electron-rebuild": "^1.8.5"
     },
     "dependencies": {
+        "@serialport/parser-inter-byte-timeout": "^9.0.1",
+        "bootstrap": "^4.5.3",
+        "datatables.net": "^1.10.22",
+        "datatables.net-dt": "^1.10.22",
+        "electron-reload": "^1.5.0",
+        "jquery": "^3.5.1",
+        "popper.js": "^1.16.1",
         "serialport": "^9.0.2",
         "tableify": "^1.1.0"
     }
