@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Kulakan-Electron</title>
+    <link rel="stylesheet" href="../../node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../../node_modules/datatables.net-dt/css/jquery.dataTables.min.css">
+    <link rel="stylesheet" href="./barangBaru.css">
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script>let $ = require('jquery');</script>
+    <script>require('popper.js');</script>
+    <script>require('bootstrap');</script>
+</head>
+
+<body>
+    <div class="m-3" style="background-color: azure">
+        <h1 class="mb-3 text-center">Barang Baru!</h1>
+    </div>
+    <div class="container">
+        <form id="fomnewbarang">
+            <div class="form-group row">
+                <label for="skubarang" class="col-sm-2 col-form-label">SKU</label>
+                <div class="col-sm-6">
+                    <input type="text" readonly class="form-control text-center" id="skubarang">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="namabarang" class="col-sm-2 col-form-label">Barang</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="namabarang" placeholder="Masukkan nama barang">
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="jumlahbarang" class="col-sm-2 col-form-label">Jumlah</label>
+                <div class="col-sm-2">
+                    <input type="number" class="form-control text-center" id="jumlahbarang" value="1">
+                </div>
+                <div class="col-md-3">
+                    <select id="satuankulak" class="form-control">
+                        <option selected>Duz</option>
+                        <option>Pack</option>
+                        <option>Saset</option>
+                    </select>
+                </div>
+            </div>
+            <div class="form-group row">
+                <label for="hargabarang" class="col-sm-2 col-form-label">Harga</label>
+                <div class="col-sm-10">
+                    <input type="text" class="form-control" id="hargabarang" placeholder="0">
+                    <small id="hargabarangHelp" class="form-text text-muted">Harga barang</small>
+                </div>
+            </div>
+            <!-- Satuan Penjualan group -->
+            <div id="colsatuanecer">
+                <div class="form-group row">
+                    <label for="" class="col-sm-2 col-form-label">Satuan Penjualan</label>
+                    <div class="col-md-3">
+                        <select id="eceranfix" class="form-control" disabled>
+                            <option selected>Duz</option>
+                            <option>Pack</option>
+                            <option>Saset</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- <div class="form-group row">
+                    <div class="col-sm-2">
+                        <input type="button" value="x" class="btn btn-sm btn-outline-danger delete-btn-eceran">
+                    </div>
+                    <div class="col-md-3">
+                        <select id="eceranfix" class="form-control">
+                            <option selected>Duz</option>
+                            <option>Pack</option>
+                            <option>Saset</option>
+                        </select>
+                    </div>
+                </div> -->
+            </div>
+            <div class="form-group row">
+                <label for="" class="col-sm-2 col-form-label"></label>
+                <div class="col-md-5">
+                    <small class="form-text text-muted text-right">Tambah Satuan barang untuk dijual</small>
+                </div>
+                <div class="col-sm-1">
+                    <a href="#" class="btn btn-sm btn-block bubbly-button" id="addeceran">+</a>
+                </div>
+            </div>
+            <br>
+            <center>
+                <button type="submit" class="btn btn-outline-primary btn-block col-sm-4 analize-button">Analisa</button>
+            </center>
+        </form>
+        <br><br><br><br><br><br><br><br><br><br><br><br><br>
+        <button class="btn btn-block btn-primary" id="btnBac">Kembali</button> <br>
+    </div>
+</body>
+<script>
+    const electron = require('electron')
+    const ipc = electron.ipcRenderer
+    const remote = require('electron').remote;
+    const Store = require('electron-store')
+
+    //var 
+    const store = new Store()
+
+    //element
+    const back = document.getElementById("btnBac")
+    const skuid = document.getElementById("skubarang")
+    back.addEventListener('click', function () {
+        console.log("hello back")
+        var window = remote.getCurrentWindow();
+        window.close();
+    })
+
+    // autoload 
+    skuid.value = ipc.sendSync('send-toget-sku')
+
+    // animation
+    //analizy
+    $('#fomnewbarang').on('submit', function (e) {
+        e.preventDefault();
+        var but = $(this).find('.analize-button').toggleClass('sending').blur();
+
+        setTimeout(function () {
+            but.removeClass('sending').blur();
+        }, 4500);
+    })
+    //bubble
+    var animateButton = function (e) {
+        e.preventDefault;
+        //reset animation
+        e.target.classList.remove('animate');
+
+        e.target.classList.add('animate');
+        setTimeout(function () {
+            e.target.classList.remove('animate');
+        }, 700);
+    };
+    var bubblyButtons = document.getElementsByClassName("bubbly-button");
+    for (var i = 0; i < bubblyButtons.length; i++) {
+        bubblyButtons[i].addEventListener('click', animateButton, false);
+    }
+    // Doc Readu
+    $(document).ready(function () {
+        console.log("doc is ready")
+        helpharga()
+
+        $('#jumlahbarang').on('input', function (e) {
+            helpharga()
+        });
+        $('#satuankulak').on('change', function (e) {
+            helpharga()
+            $('#eceranfix').val($('#satuankulak').find(":selected").text())
+        });
+        function helpharga() {
+            var x = $('#satuankulak').find(":selected").text()
+            var n = $('#jumlahbarang').val()
+            console.log('Changed! ' + n + " - " + x)
+            $('#hargabarangHelp').html("Harga barang untuk " + n + " " + x)
+        }
+
+        $('#addeceran').on('click', function () {
+            console.log("add eceran")
+            setTimeout(() => { addec() }, 250)
+        });
+        $('#colsatuanecer').on('click', '.delete-btn-eceran', function () {
+            $(this).closest('.form-group').remove()
+            console.log("deleted row")
+        });
+
+        //element eceran
+        function addec() {
+            var $div = $("<div>", { "class": "form-group row" });
+            var $rmov = $("<input>", { "class": "btn btn-sm btn-outline-danger delete-btn-eceran", "type": "button" }).attr({ value: "x" })
+            var $col1 = $("<div>", { "class": "col-sm-2" }).append($rmov).appendTo($div);
+            var $col2tipe = $("<div>", { "class": "col-md-3" }).appendTo($div);
+            var $col3 = $("<label>", { "class": "col-form-label" }).text('isi').appendTo($div);
+            var $col4size = $("<div>", { "class": "col-sm-2" }).appendTo($div);
+            // compile
+            $col4size.append($('<input>', { "class": "form-control text-center", "type": "number" }).attr({ name: 'from', value: 1 }))
+
+            var arr = [
+                { val: 1, text: 'One' },
+                { val: 2, text: 'Two' },
+                { val: 3, text: 'Three' }
+            ];
+
+            var sel = $('<select>', { "class": "form-control" }).appendTo($col2tipe);
+            $(arr).each(function () {
+                sel.append($("<option>").attr('value', this.val).text(this.text));
+            });
+
+            $('#colsatuanecer').append($div)
+        }
+    })
+</script>
+
+</html>

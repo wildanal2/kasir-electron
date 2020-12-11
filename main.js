@@ -5,18 +5,22 @@ const BrowserWindow = electron.BrowserWindow
 const path = require('path')
 const url = require('url')
 const ipc = electron.ipcMain
+const Store = require('electron-store')
+const { event } = require('jquery')
 
-require('electron-reload')(__dirname + '/index.html', {
+// require('electron-reload')(__dirname + '/index.html', {
+require('electron-reload')(__dirname + '/app/gudang/kulakan.html', {
     electron: path.join(__dirname, 'node_modules', '.bin', 'electron')
 });
 
-let mainWindow, childWindow;
+let mainWindow, secondchildWindow, thirdchildwindow;
 
 function createWindow() {
     // Create the browser window.
+    // let { width, height } = store.get('windowBounds');
     mainWindow = new BrowserWindow({
         width: 1600,
-        height: 700,
+        height: 900,
         webPreferences: {
             nodeIntegration: true,
             preload: path.join(__dirname, 'preload.js')
@@ -26,6 +30,7 @@ function createWindow() {
     // and load the index.html of the app.
     mainWindow.loadURL(url.format({
         pathname: path.join(__dirname, 'index.html'),
+        // pathname: path.join(__dirname, '/app/gudang/kulakan.html'),
         protocol: 'file:',
         slashes: true
     }))
@@ -34,27 +39,27 @@ function createWindow() {
     mainWindow.webContents.openDevTools();
     process.env.NODE_ENV !== 'production';
 
+    const store = new Store();
+
+    store.set('unicorn', '🦄');
+    console.log(store.get('unicorn'));
+
     // Emitted when the window is closed.
     mainWindow.on('closed', function () {
-        // Dereference the window object, usually you would store windows
-        // in an array if your app supports multi windows, this is the time
-        // when you should delete the corresponding element.
         mainWindow = null
     })
 }
 
-app.on('ready', createWindow)
+app.on('ready', () => {
+    createWindow()
+})
 
 // Quit when all windows are closed.
 app.on('window-all-closed', function () {
-    // On OS X it is common for applications and their menu bar
-    // to stay active until the user quits explicitly with Cmd + Q
     app.quit()
 })
 
 app.on('activate', function () {
-    // On OS X it's common to re-create a window in the app when the
-    // dock icon is clicked and there are no other windows open.
     if (mainWindow === null) {
         createWindow()
     }
@@ -67,17 +72,58 @@ ipc.on('btn-back', (event) => {
     mainWindow.webContents.goBack()
 })
 
+ipc.on('btn-close-third', (event) => {
+    // secondchildWindow.webContents.goBack();
+    // thirdchildwindow.
+})
+
 ipc.on('newkulakan', (event) => {
-    childWindow = new BrowserWindow({
-        // show: false,
+    secondchildWindow = new BrowserWindow({
+        width: 1300,
+        height: 900,
+        alwaysOnTop: true,
         parent: mainWindow,
-        modal: true,
         title: 'child',
-        height: 600,
-        width: 800
+        webPreferences: {
+            nodeIntegration: true
+        }
     });
-    childWindow.loadURL('https://github.com');
-    childWindow.once('ready-to-show', () => {
-        childWindow.show()
+    secondchildWindow.loadURL(url.format({
+        pathname: path.join(__dirname, '/app/gudang/kulakan.html'),
+        protocol: 'file:',
+        slashes: true
+    }))
+    secondchildWindow.webContents.openDevTools();
+    // secondchildWindow.setAlwaysOnTop(true, "pop-up-menu")
+    secondchildWindow.once('ready-to-show', () => {
+        secondchildWindow.show()
     });
+})
+
+ipc.on('third-fixserialport', (event) => {
+    thirdchildwindow = new BrowserWindow({
+        parent: secondchildWindow,
+        modal: true,
+        webPreferences: {
+            nodeIntegration: true
+        }
+    })
+    thirdchildwindow.webContents.openDevTools()
+    thirdchildwindow.loadURL(url.format({
+        pathname: path.join(__dirname, 'app/fixserialusb.html'),
+        protocol: 'file:',
+        slashes: true
+    }))
+})
+
+
+// == IPC - Parsing Data TEMp == \\
+var dataSKU = ""
+ipc.on('send-tosave-sku', (event, data) => {
+    dataSKU = data
+    console.log("data sku saved :" + dataSKU)
+})
+ipc.on('send-toget-sku', (event, data) => {
+    console.log("get data sku :" + dataSKU)
+    event.returnValue = dataSKU;
 })

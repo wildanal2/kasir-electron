@@ -10,15 +10,15 @@ const InterByteTimeout = require('@serialport/parser-inter-byte-timeout')
 
 
 
-// const btnRefresh = document.getElementById("btnGudang");
+const btnRefresh = document.getElementById("btnG");
 
-// btnRefresh.addEventListener('click', () => {
-//   SerialPort.list().then(ports => {
-//     ports.forEach(function (port) {
-//       console.log(port.path);
-//       console.log(port.pnpId);
-//       console.log(port.manufacturer);
-//     });
-//     // document.getElementById('ports').innerHTML = tableHTML
-//   });
-// })  
+btnRefresh.addEventListener('click', () => {
+    SerialPort.list().then(ports => {
+        ports.forEach(function (port) {
+            console.log(port.path);
+            console.log(port.pnpId);
+            console.log(port.manufacturer);
+        });
+        // document.getElementById('ports').innerHTML = tableHTML
+    });
+})  

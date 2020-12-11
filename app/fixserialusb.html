@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>Kulakan-Electron</title>
+    <link rel="stylesheet" href="../node_modules/bootstrap/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="../node_modules/datatables.net-dt/css/jquery.dataTables.min.css">
+    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
+    <script>let $ = require('jquery');</script>
+    <script>require('popper.js');</script>
+    <script>require('bootstrap');</script>
+</head>
+
+<body>
+    <div class="m-3" style="background-color: azure">
+        <h1 class="mb-3 text-center">Fix Serialport!</h1>
+    </div>
+    <div class="container">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="alert alert-info" role="alert">
+                    Check port aktif: <br>
+                    <div class="text-center">
+                        <span id="porttoconnect"> Pilih port dan klik test</span>
+                        <span id="infoporttoconnect" style="display: none" class="badge badge-warning">terhubung,
+                            menuggu ..</span>
+                    </div>
+                    <br>
+                    <div class="text-center">
+                        <div class="alert alert-light m-3 text-center" role="alert" id="result-test"
+                            style="display: none">
+                            test result...
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <input type="button" id="btn-refresh" value="re-fresh &#x21bb;" class="btn btn-success mt-2"
+                    style="float: right;">
+            </div>
+        </div>
+        <table class="table mt-2" id="tbelport">
+        </table>
+
+        <button class="btn btn-block btn-primary" id="btnBac">Kembali</button>
+        <br>
+    </div>
+</body>
+<script>
+    const electron = require('electron')
+    const path = require('path')
+    const SerialPort = require('serialport')
+    const InterByteTimeout = require('@serialport/parser-inter-byte-timeout')
+    const ipc = electron.ipcRenderer
+    const remotee = require('electron').remote
+    const Store = require('electron-store')
+
+    //var 
+    const store = new Store();
+    var portname = "";
+    var buss = "";
+
+    //element
+    const back = document.getElementById("btnBac")
+
+    refreshports()
+
+    //event
+    back.addEventListener('click', () => {
+        if (portname != "") {
+            store.set('scanner_port', portname);
+            store.set('scanner_bus', buss);
+        }
+
+        console.log("back click")
+        ipc.send('btn-close-third')
+
+        var win = remotee.getCurrentWindow()
+        win.close()
+    })
+
+    const btnRefresh = document.getElementById("btn-refresh");
+
+    btnRefresh.addEventListener('click', () => {
+        refreshports()
+    })
+
+    function refreshports() {
+        document.getElementById("tbelport").innerHTML = "";
+        var tbl = document.createElement('table');
+        tbl.className += "table mt-2";
+
+        // thead
+        var th = tbl.createTHead();
+        var thr = th.insertRow();
+        if (true) {
+            // works
+            var thc1 = document.createElement('th');
+            var thc2 = document.createElement('th');
+            var thc3 = document.createElement('th');
+            var thc4 = document.createElement('th');
+            thr.appendChild(thc1);
+            thr.appendChild(thc2);
+            thr.appendChild(thc3);
+            thr.appendChild(thc4);
+        } else {
+            // does not work
+            var thc = thr.insertCell();
+        }
+        var tht1 = document.createTextNode("Nama port");
+        var tht2 = document.createTextNode("vendor");
+        var tht3 = document.createTextNode("baudRate");
+        var tht4 = document.createTextNode("aksi");
+        thc1.appendChild(tht1);
+        thc2.appendChild(tht2);
+        thc3.appendChild(tht3);
+        thc4.appendChild(tht4);
+        // tbody flow  
+        SerialPort.list().then(ports => {
+            ports.forEach(function (port) {
+                console.log(port);
+                var tr = tbl.insertRow();
+                var tc1 = tr.insertCell();
+                var tc2 = tr.insertCell();
+                var tc3 = tr.insertCell();
+                var tc4 = tr.insertCell();
+                var tt1 = document.createTextNode(port.path);
+                var tt2 = document.createTextNode(port.manufacturer);
+                //select optn
+                select = document.createElement("select");
+                select.className += "busspeed";
+                var opt1 = new Option();
+                opt1.value = 6400;
+                opt1.text = "6400";
+                var opt2 = new Option();
+                opt2.value = 19200;
+                opt2.text = "19200";
+                var opt3 = new Option();
+                opt3.value = 57600;
+                opt3.text = "57600";
+                var opt4 = new Option();
+                opt4.value = 115200;
+                opt4.text = "115200";
+
+                select.options.add(opt1);
+                select.options.add(opt2);
+                select.options.add(opt3);
+                select.options.add(opt4);
+
+                // btn to connect
+                var btn = document.createElement("button");
+                btn.className += "btn btn-sm btn-primary to-connect";
+                btn.innerHTML = "test";
+                //
+                btn.addEventListener('click', function () {
+                    var bus = $(this).closest("tr")   // Finds the closest row <tr> 
+                        .find(":selected")     // Gets a descendent with class="nr"
+                        .val();
+                    // call fun
+                    trycon(port.path, parseInt(bus));
+                });
+
+                tc1.appendChild(tt1);
+                tc2.appendChild(tt2);
+                tc3.appendChild(select);
+                tc4.appendChild(btn);
+            });
+        });
+        // 
+        document.getElementById('tbelport').appendChild(tbl);
+    }
+
+    var trycon = function (por, buz) {
+        try {
+            var serial = new SerialPort(por, { baudRate: buz });
+            serial.on('open', function () {
+                document.getElementById("porttoconnect").innerHTML = por + "  (" + buz + ")    ";
+                document.getElementById("infoporttoconnect").style.display = 'inline';
+                console.log('PORT open');
+                document.getElementById("infoporttoconnect").classList.add("badge-warning");
+                document.getElementById("infoporttoconnect").classList.remove("badge-success");
+                document.getElementById("infoporttoconnect").classList.remove("badge-danger");
+                document.getElementById("infoporttoconnect").innerHTML = "terhubung, menuggu..";
+                back.innerHTML = "Kembali";
+                back.classList.remove("btn-success");
+                back.classList.add("btn-primary");
+            });
+
+            var parser = serial.pipe(new InterByteTimeout({ interval: 30 }));
+            parser.on('data', (data) => {
+                document.getElementById("result-test").style.display = 'inline';
+                document.getElementById("result-test").innerHTML = data.toString('utf8');
+                setTimeout(function () {
+                    document.getElementById("result-test").style.display = 'none';
+                }, 4000);
+                //
+                portname = por;
+                buss = buz;
+                back.innerHTML = "Simpan dan Kembali";
+                back.classList.add("btn-success");
+                back.classList.remove("btn-primary");
+                //ok
+                document.getElementById("infoporttoconnect").classList.remove("badge-warning");
+                document.getElementById("infoporttoconnect").classList.remove("badge-danger");
+                document.getElementById("infoporttoconnect").classList.add("badge-success");
+                document.getElementById("infoporttoconnect").innerHTML = "Ok"
+            });
+            serial.on('close', function () {
+                console.log('ARDUINO PORT CLOSED');
+                document.getElementById("porttoconnect").innerHTML = "Pilih port dan klik test";
+                // clear
+                portname = "";
+                buss = "";
+                back.innerHTML = "Kembali";
+                back.classList.remove("btn-success");
+                back.classList.add("btn-primary");
+            });
+            serial.on('error', function (err) {
+                console.error("error", err);
+                document.getElementById("infoporttoconnect").style.display = 'inline';
+                document.getElementById("infoporttoconnect").classList.add("badge-danger");
+                document.getElementById("infoporttoconnect").classList.remove("badge-success");
+                document.getElementById("infoporttoconnect").classList.remove("badge-warning");
+                document.getElementById("infoporttoconnect").innerHTML = "Gagal";
+                document.getElementById("porttoconnect").innerHTML = "Gagal terhubung";
+                //
+                document.getElementById("result-test").style.display = 'inline';
+                document.getElementById("result-test").innerHTML = por + " (" + buz + ") :->> FAIL";
+                setTimeout(function () {
+                    document.getElementById("result-test").style.display = 'none';
+                }, 3000);
+                // clear
+                portname = "";
+                buss = "";
+                back.innerHTML = "Kembali";
+            });
+        } catch (ex) {
+            console.log("ERROR opening port\n" + ex);
+            // clear
+            portname = "";
+            buss = "";
+        }
+    }
+
+    $(document).ready(function () {
+        console.log("redy");
+
+
+    })
+</script>
+
+</html>
